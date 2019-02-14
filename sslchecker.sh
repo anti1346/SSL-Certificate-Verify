@@ -29,58 +29,68 @@ sslchk(){
 
 _DOMAINLIST=`cat domain_list.txt`
 
-echo "=================================================================================================="
-printf '| 도메인 %-30s\t | IP %-13s\t | 만료일 %-5s\t | 만료날짜 %-5s|\n'
-echo "=================================================================================================="
-
 for domainlist in $_DOMAINLIST
         do
 
         _today=`date +'%Y-%m-%d'`
-        _VIP=`dig $domainlist +short`
+        _VIP=`dig $domainlist +short | paste -sd ","`
         _ED=`./ssl-cert-info.sh --host $domainlist --end | awk {'print $1'}`
         _expire_date=`date -d "$_ED" +'%Y-%m-%d'`
         _expire_day=`dateDiff -d "$_today" "$_expire_date"`
 
         if [ $_expire_day -le 90 ] ; then  
-                printf "| %-30s\t" "$domainlist"
-                printf " | %-13s\t" "$_VIP"
-                printf " | %-5d\t" "$_expire_day"
-                printf " | %-5s\t |\n" "$_ED"
+		#printf "| %-20s | %-65s | %-15s | %-14s |\n" "$domainlist" "$_VIP" "$_expire_day"  "$_ED"
+		printf "<tr><td>$domainlist</td><td>$_VIP</td><td>$_expire_day</td><td>$_ED</td></td>\n" "$domainlist" "$_VIP" "$_expire_day" "$_ED"
         fi
 
 done
-
-echo "=================================================================================================="
-
 }
 
 ### call function
-#sslchk
 #sslchk > result.txt
 
 ### html
-echo "<html>" > result.html
-echo "<head>" >> result.html
-echo "<meta http-equiv="Content-Type" content="text/html\; charset=utf-8" />" >> result.html
-echo "</head>" >> result.html
-echo "<body>" >> result.html
-echo "<p>SSL 인증서 만료일 안내</p>" >> result.html
-echo "<div style="width:100%\; overflow:auto"> " >> result.html
-echo "<pre width="100%">" >> result.html
-echo "<font face="Monaco">" >> result.html
+cat <<EOF > result.html
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html\; charset=utf-8" />
+</head>
+<body>
+<style>
+  table {
+    width: 60%;
+    border-top: 1px solid #444444;
+    border-collapse: collapse;
+  }
+  th, td {
+    border-bottom: 1px solid #444444;
+    padding: 10px;
+    text-align: center;
+  }
+  th {
+    background-color: #e3f2fd;
+  }
+  td {
+    background-color: #000000;
+  }
+</style>
+
+<table border="1px">
+	<thead>
+		<tr><th>도메인</th><th>IP</th><th>만료일 (days)</th><th>만료날짜 (date)</th></tr>
+	</thead>
+	<tbody>
+EOF
+
 sslchk >> result.html
-echo "</font>" >> result.html
-echo "</pre>" >> result.html
-echo "</div>" >> result.html
-echo "</body>" >> result.html
-echo "</html>" >> result.html
+
+cat <<EOF >> result.html
+	</tbody>
+</table>
+</body>
+</html>
+EOF
 
 
 ### mail sender
-#cat result.txt | mail -v -s "SSL 인증서 만료일 안내" anti1346@imicorp.co.kr
 cat .mail_header result.html | sendmail -t
-
-### call function && mail sender
-#sslchk | mail -v -s "SSL 인증서 만료일 안내" anti1346@imicorp.co.kr
-
