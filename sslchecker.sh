@@ -1,4 +1,4 @@
-#/bin/sh 
+#/bin/sh
 
 ### function
 date2stamp () {
@@ -22,27 +22,26 @@ dateDiff (){
     dte2=$(date2stamp $2)
     diffSec=$((dte2-dte1))
     if ((diffSec < 0)); then abs=-1; else abs=1; fi
-    echo $((diffSec/sec*abs))  
+    echo $((diffSec/sec*abs))
 }
 
 sslchk(){
-
 _DOMAINLIST=`cat domain_list.txt`
-
 for domainlist in $_DOMAINLIST
-        do
+    do
+    _ToDay=`date +'%Y-%m-%d'`
+    _IP_Address=`dig $domainlist +short | paste -sd ","`
+    _Expired_Date=`./ssl-cert-info.sh --host $domainlist --end | awk {'print $1'}`
+    _Expiration_Date=`date -d "$_Expired_Date" +'%Y-%m-%d'`
+    _Expired_Days=`dateDiff -d "$_ToDay" "$_Expiration_Date"`
 
-        _today=`date +'%Y-%m-%d'`
-        _VIP=`dig $domainlist +short | paste -sd ","`
-        _ED=`./ssl-cert-info.sh --host $domainlist --end | awk {'print $1'}`
-        _expire_date=`date -d "$_ED" +'%Y-%m-%d'`
-        _expire_day=`dateDiff -d "$_today" "$_expire_date"`
-
-        if [ $_expire_day -le 90 ] ; then  
-		#printf "| %-20s | %-65s | %-15s | %-14s |\n" "$domainlist" "$_VIP" "$_expire_day"  "$_ED"
-		printf "<tr><td>$domainlist</td><td>$_VIP</td><td>$_expire_day</td><td>$_ED</td></td>\n" "$domainlist" "$_VIP" "$_expire_day" "$_ED"
-        fi
-
+    if [ $_Expired_Days -lt 30 ] ; then
+     	printf "<tr><td>Must update 30 days ago</td><td>$domainlist</td><td>$_IP_Address</td><td>$_Expired_Days</td><td>$_Expired_Date</td></tr>\n" "$domainlist" "$_IP_Address" "$_Expired_Days" "$_Expired_Date"
+    elif [ $_Expired_Days -gt 30 -a $_Expired_Days -le 90 ] ; then
+	printf "<tr><td>Must update 30 to 90 days ago</td><td>$domainlist</td><td>$_IP_Address</td><td>$_Expired_Days</td><td>$_Expired_Date</td></tr>\n" "$domainlist" "$_IP_Address" "$_Expired_Days" "$_Expired_Date"
+    else
+	printf "<tr><td>OK</td><td>$domainlist</td><td>$_IP_Address</td><td>$_Expired_Days</td><td>$_Expired_Date</td></tr>\n" "$domainlist" "$_IP_Address" "$_Expired_Days" "$_Expired_Date"
+    fi
 done
 }
 
@@ -58,9 +57,11 @@ cat <<EOF > result.html
 <body>
 <style>
   table {
-    width: 60%;
+    width: 80%;
     border-top: 1px solid #444444;
     border-collapse: collapse;
+    font-family: Monaco;
+    font-size:90%;
   }
   th, td {
     border-bottom: 1px solid #444444;
@@ -71,13 +72,13 @@ cat <<EOF > result.html
     background-color: #e3f2fd;
   }
   td {
-    background-color: #000000;
+    background-color: #FFFFFF;
   }
 </style>
-
+<font face="Monaco">
 <table border="1px">
 	<thead>
-		<tr><th>도메인</th><th>IP</th><th>만료일 (days)</th><th>만료날짜 (date)</th></tr>
+		<tr><th>Condition</th><th>Domain</th><th>IP Address</th><th>Expired Days</th><th>Expiration Date</th></tr>
 	</thead>
 	<tbody>
 EOF
@@ -87,10 +88,10 @@ sslchk >> result.html
 cat <<EOF >> result.html
 	</tbody>
 </table>
+</font>
 </body>
 </html>
 EOF
-
 
 ### mail sender
 cat .mail_header result.html | sendmail -t
