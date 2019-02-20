@@ -30,7 +30,7 @@ _DOMAINLIST=`cat domain_list.txt`
 for domainlist in $_DOMAINLIST
     do
     _ToDay=`date +'%Y-%m-%d'`
-    _IP_Address=`dig $domainlist +short | paste -sd ","`
+    _IP_Address=`dig $domainlist +short | paste -sd ", "`
     _Expired_Date=`./ssl-cert-info.sh --host $domainlist --end | awk {'print $1'}`
     _Expiration_Date=`date -d "$_Expired_Date" +'%Y-%m-%d'`
     _Expired_Days=`dateDiff -d "$_ToDay" "$_Expiration_Date"`
@@ -53,8 +53,6 @@ cat <<EOF > result.html
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html\; charset=utf-8" />
-</head>
-<body>
 <style>
   table {
     width: 80%;
@@ -75,6 +73,8 @@ cat <<EOF > result.html
     background-color: #FFFFFF;
   }
 </style>
+</head>
+<body>
 <font face="Monaco">
 <table border="1px">
 	<thead>
