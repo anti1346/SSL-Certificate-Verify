@@ -1,5 +1,8 @@
 #/bin/sh
 
+_execute_directory='/app/script/SSL-Certificate-Verify'
+cd $_execute_directory
+
 ### function
 date2stamp () {
     date --utc --date "$1" +%s
@@ -94,4 +97,8 @@ cat <<EOF >> result.html
 EOF
 
 ### mail sender
-cat .mail_header result.html | sendmail -t
+_Day=`date +%a`
+
+if [ "$_Day" = "Mon" ] ; then
+	cat .mail_header result.html | sudo sendmail -t
+fi
