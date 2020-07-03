@@ -3,6 +3,9 @@
 _execute_directory='/app/script/SSL-Certificate-Verify'
 cd $_execute_directory
 
+### mail user change
+#sed -i "s/.*no-reply.*/From: no-reply"$(date '+%s')"@serv-24.sangchul.kr/g" $_execute_directory/.mail_header
+
 ### function
 date2stamp () {
     date --utc --date "$1" +%s
