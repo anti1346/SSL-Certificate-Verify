@@ -23,16 +23,19 @@ def get_ssl_info(domain):
     return domain, ip, start_date, expiration_date, remaining_days, reg_authority
 
 if __name__ == '__main__':
-    # Get the domain name from the user
-    domain = input('Enter the domain name: ')
+    # Get the domain name from the file
+    with open('domains.txt', 'r') as f:
+        domains = f.readlines()
 
-    # Get the SSL information for the domain
-    ssl_info = get_ssl_info(domain)
+    # Get the SSL information for each domain
+    for domain in domains:
+        ssl_info = get_ssl_info(domain.strip())
 
-    # Print the SSL information
-    print('Domain: {}'.format(ssl_info[0]))
-    print('IP: {}'.format(ssl_info[1]))
-    print('Start date: {}'.format(ssl_info[2]))
-    print('Expiration date: {}'.format(ssl_info[3]))
-    print('Remaining days: {}'.format(ssl_info[4]))
-    print('Registry authority: {}'.format(ssl_info[5]))
+        # Print the SSL information
+        print('Domain: {}'.format(ssl_info[0]))
+        print('IP: {}'.format(ssl_info[1]))
+        print('Start date: {}'.format(ssl_info[2]))
+        print('Expiration date: {}'.format(ssl_info[3]))
+        print('Remaining days: {}'.format(ssl_info[4]))
+        print('Registry authority: {}'.format(ssl_info[5]))
+
