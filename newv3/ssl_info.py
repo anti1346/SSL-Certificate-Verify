@@ -1,41 +1,71 @@
 import ssl
 import socket
+from datetime import datetime
 
 def get_ssl_info(domain):
-    # Get the socket object for the domain
+    # 도메인에 대한 소켓 객체 가져오기
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(10)
     sock.connect((domain, 443))
 
-    # Get the SSL object for the socket
-    ssl_obj = ssl.wrap_socket(sock)
+    # 소켓 객체를 SSL 컨텍스트로 감싸기
+    context = ssl.create_default_context()
+    ssl_sock = context.wrap_socket(sock, server_hostname=domain)
 
-    # Get the certificate from the SSL object
-    cert = ssl_obj.getpeercert()
+    # SSL 객체에서 인증서 가져오기
+    cert = ssl_sock.getpeercert()
 
-    # Get the start date, expiration date, and remaining days for the certificate
-    start_date = cert['notBefore']
-    expiration_date = cert['notAfter']
-    remaining_days = (expiration_date - start_date).days
+    # 인증서의 시작일, 만료일 및 남은 일 수 가져오기
+    start_date = datetime.strptime(cert['notBefore'], "%b %d %H:%M:%S %Y %Z").strftime("%Y-%m-%d")
+    expiration_date = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z").strftime("%Y-%m-%d")
+    remaining_days = (datetime.strptime(expiration_date, "%Y-%m-%d") - datetime.now()).days
 
-    # Get the registry authority for the certificate
-    reg_authority = cert['subjectAltName'][1]['dNSName']
+    # 등록행자(Registrar) 가져오기
+    registrar = ""
+    issuer = dict(x[0] for x in cert['issuer'])
+    if 'organizationName' in issuer:
+        registrar = issuer['organizationName']
 
-    return domain, ip, start_date, expiration_date, remaining_days, reg_authority
+    # 도메인의 IP 주소 가져오기
+    ip = socket.gethostbyname(domain)
+
+    return domain, ip, start_date, expiration_date, remaining_days, registrar
 
 if __name__ == '__main__':
-    # Get the domain name from the file
+    # 파일에서 도메인 이름 가져오기
     with open('domains.txt', 'r') as f:
         domains = f.readlines()
 
-    # Get the SSL information for each domain
+    table_rows = []
+
+    # 각 도메인에 대한 SSL 정보 가져오기
     for domain in domains:
         ssl_info = get_ssl_info(domain.strip())
 
-        # Print the SSL information
-        print('Domain: {}'.format(ssl_info[0]))
-        print('IP: {}'.format(ssl_info[1]))
-        print('Start date: {}'.format(ssl_info[2]))
-        print('Expiration date: {}'.format(ssl_info[3]))
-        print('Remaining days: {}'.format(ssl_info[4]))
-        print('Registry authority: {}'.format(ssl_info[5]))
+        # SSL 정보를 테이블 행에 추가하기
+        table_rows.append(ssl_info)
 
+    # 남은 일 수를 기준으로 테이블 행 정렬하기 (오름차순)
+    table_rows.sort(key=lambda x: x[4])
+
+    # HTML 테이블 생성하기
+    html_table = "<table style='border-collapse: collapse; border: 1px solid black;'>\n"
+    html_table += "<tr><th style='border: 1px solid black;'>Domain</th><th style='border: 1px solid black;'>IP</th><th style='border: 1px solid black; text-align: center;'>Start Date</th><th style='border: 1px solid black; text-align: center;'>Expiration Date</th><th style='border: 1px solid black; text-align: center;'>Remaining Days</th><th style='border: 1px solid black;'>Registrar</th></tr>\n"
+
+    for row in table_rows:
+        html_table += "<tr>"
+        for i, cell in enumerate(row):
+            # 특정 열에 가운데 정렬 적용하기
+            if i in [2, 3, 4]:
+                html_table += f"<td style='border: 1px solid black; text-align: center;'>{cell}</td>"
+            else:
+                html_table += f"<td style='border: 1px solid black;'>{cell}</td>"
+        html_table += "</tr>\n"
+
+    html_table += "</table>"
+
+    # HTML 테이블을 result.html 파일에 저장하기
+    with open('result.html', 'w') as file:
+        file.write(html_table)
+
+    print("SSL 정보가 result.html 파일에 저장되었습니다.")
