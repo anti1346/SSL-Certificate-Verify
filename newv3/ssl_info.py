@@ -49,7 +49,13 @@ if __name__ == '__main__':
     table_rows.sort(key=lambda x: x[4])
 
     # HTML 테이블 생성하기
-    html_table = "<table style='border-collapse: collapse; border: 1px solid black;'>\n"
+    html_table = "<html>"
+    html_table += "<head>"
+    html_table += "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>"
+    html_table += "</head>"
+    html_table += "<body>"
+    html_table += "<h1>SSL 인증서 만료일</h1>"
+    html_table += "<table style='border-collapse: collapse; border: 1px solid black;'>\n"
     html_table += "<tr><th style='border: 1px solid black;'>Domain</th><th style='border: 1px solid black;'>IP</th><th style='border: 1px solid black; text-align: center;'>Start Date</th><th style='border: 1px solid black; text-align: center;'>Expiration Date</th><th style='border: 1px solid black; text-align: center;'>Remaining Days</th><th style='border: 1px solid black;'>Registrar</th></tr>\n"
 
     for row in table_rows:
@@ -63,6 +69,8 @@ if __name__ == '__main__':
         html_table += "</tr>\n"
 
     html_table += "</table>"
+    html_table += "</body>"
+    html_table += "</html>"
 
     # HTML 테이블을 result.html 파일에 저장하기
     with open('result.html', 'w') as file:
