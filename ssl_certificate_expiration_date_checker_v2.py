@@ -26,17 +26,13 @@ def get_ssl_info(domain):
         # 도메인의 IP 주소 가져오기
         ip = socket.gethostbyname(domain)
 
-        # 도메인의 IP 주소 가져오기 (DNS 쿼리 사용)
-        resolver = dns.resolver.Resolver()
-        ip_addresses = [result.address for result in resolver.resolve(domain, 'A')]
-
         # 등록행자(Registrar) 가져오기
         registrar = ""
         issuer = dict(x[0] for x in cert['issuer'])
         if 'organizationName' in issuer:
             registrar = issuer['organizationName']
 
-        return domain, ip, start_date, expiration_date, int(remaining_days), ip_addresses, registrar
+        return domain, ip, start_date, expiration_date, int(remaining_days), registrar
     except (socket.timeout, ssl.SSLCertVerificationError):
         return domain, [], "N/A", "N/A", "N/A", "N/A"
 
@@ -82,7 +78,7 @@ if __name__ == '__main__':
     html_table += "</style>"
     html_table += "</head>"
     html_table += "<body>"
-    html_table += "<h1>SSL Certificate Expiration Date(한글)</h1>"
+    html_table += "<h1>SSL Certificate Expiration Date(SSL 인증서 만료일)</h1>"
     html_table += "<table style='border-collapse: collapse; border: 1px solid black;'>\n"
     html_table += "<tr>"
     html_table += "<th style='border: 1px solid black;'>Domain</th>"
@@ -90,20 +86,17 @@ if __name__ == '__main__':
     html_table += "<th style='border: 1px solid black; text-align: center;'>Start Date</th>"
     html_table += "<th style='border: 1px solid black; text-align: center;'>Expiration Date</th>"
     html_table += "<th style='border: 1px solid black; text-align: center;'>Remaining Days</th>"
-    html_table += "<th style='border: 1px solid black;'>IP Addresses</th>"
     html_table += "<th style='border: 1px solid black;'>Registrar</th>"
     html_table += "</tr>\n"
 
     for row in table_rows:
-        domain, ip, start_date, expiration_date, remaining_days, ip_addresses, registrar = row
-        ip_addresses_str = ", ".join(ip_addresses) if ip_addresses else "N/A"
+        domain, ip, start_date, expiration_date, remaining_days, registrar = row
         html_table += f"<tr>"
         html_table += f"<td style='border: 1px solid black;'>{domain}</td>"
         html_table += f"<td style='border: 1px solid black;'>{ip}</td>"
         html_table += f"<td style='border: 1px solid black;'>{start_date}</td>"
         html_table += f"<td style='border: 1px solid black;'>{expiration_date}</td>"
         html_table += f"<td style='border: 1px solid black;'>{remaining_days}</td>"
-        html_table += f"<td style='border: 1px solid black;'>{ip_addresses_str}</td>"
         html_table += f"<td style='border: 1px solid black;'>{registrar}</td>"
         html_table += f"</tr>\n"
 
