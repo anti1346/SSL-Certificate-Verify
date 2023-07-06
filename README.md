@@ -10,6 +10,16 @@ www.daum.net
 www.yahoo.com
 ```
 
+#### 도커 컨테이너를 실행(웹 서버 실행)
+```
+bash docker_container_start.sh
+```
+
+#### 웹 브라우저
+```
+http://localhost:8080
+```
+
 #### 크론탭 설정
 ```
 crontab -e
