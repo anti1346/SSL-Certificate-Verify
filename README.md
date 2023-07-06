@@ -1,4 +1,4 @@
-## SSL Certificate Expiration Date(SSL 인증서 만료일)
+## SSL Certificate Expiration Date Checker(SSL 인증서 만료 날짜 검사기)
 
 #### SSL 인증서 도메인 리스트 파일 생성
 ```
