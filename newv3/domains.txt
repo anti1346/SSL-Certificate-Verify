@@ -1,3 +1,5 @@
 www.google.com
 www.daum.net
 www.yahoo.com
+www.sangchul.kr
+notssl.sangchul.kr
