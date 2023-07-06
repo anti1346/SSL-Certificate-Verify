@@ -23,6 +23,9 @@ def get_ssl_info(domain):
         expiration_date = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z").strftime("%Y-%m-%d")
         remaining_days = (datetime.strptime(expiration_date, "%Y-%m-%d") - datetime.now()).days
 
+        # 도메인의 IP 주소 가져오기
+        ip = socket.gethostbyname(domain)
+
         # 도메인의 IP 주소 가져오기 (DNS 쿼리 사용)
         resolver = dns.resolver.Resolver()
         ip_addresses = [result.address for result in resolver.resolve(domain, 'A')]
@@ -33,10 +36,9 @@ def get_ssl_info(domain):
         if 'organizationName' in issuer:
             registrar = issuer['organizationName']
 
-        return domain, ip_addresses, start_date, expiration_date, int(remaining_days), registrar
+        return domain, ip, start_date, expiration_date, int(remaining_days), ip_addresses, registrar
     except (socket.timeout, ssl.SSLCertVerificationError):
         return domain, [], "N/A", "N/A", "N/A", "N/A"
-
 
 if __name__ == '__main__':
     # 파일에서 도메인 이름 가져오기
@@ -56,17 +58,15 @@ if __name__ == '__main__':
     table_rows.sort(key=lambda x: x[4] if isinstance(x[4], int) else float('inf'))
 
     # HTML 테이블 생성하기
-    html_table = "<html>"
-    html_table += "<head>"
-    html_table += "<meta charset='utf-8'>"
+    html_table = "<html><head>"
     html_table += "<meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>"
     html_table += "<style>"
     html_table += "table {"
-    html_table += "width: 80%;"
+    html_table += "width: 70%;"
     html_table += "border-top: 1px solid #444444;"
     html_table += "border-collapse: collapse;"
     html_table += "font-family: Monaco;"
-    html_table += "font-size:90%;"
+    html_table += "font-size:80%;"
     html_table += "}"
     html_table += "th, td {"
     html_table += "border-bottom: 1px solid #444444;"
@@ -82,25 +82,32 @@ if __name__ == '__main__':
     html_table += "</style>"
     html_table += "</head>"
     html_table += "<body>"
-    html_table += "<h1>SSL Certificate Expiration Date</h1>"
+    html_table += "<h1>SSL Certificate Expiration Date(한글)</h1>"
     html_table += "<table style='border-collapse: collapse; border: 1px solid black;'>\n"
     html_table += "<tr>"
     html_table += "<th style='border: 1px solid black;'>Domain</th>"
-    html_table += "<th style='border: 1px solid black;'>IP Addresses</th>"
+    html_table += "<th style='border: 1px solid black;'>IP</th>"
     html_table += "<th style='border: 1px solid black; text-align: center;'>Start Date</th>"
     html_table += "<th style='border: 1px solid black; text-align: center;'>Expiration Date</th>"
     html_table += "<th style='border: 1px solid black; text-align: center;'>Remaining Days</th>"
+    html_table += "<th style='border: 1px solid black;'>IP Addresses</th>"
     html_table += "<th style='border: 1px solid black;'>Registrar</th>"
     html_table += "</tr>\n"
 
     for row in table_rows:
-        domain, ip_addresses, start_date, expiration_date, remaining_days, registrar = row
+        domain, ip, start_date, expiration_date, remaining_days, ip_addresses, registrar = row
         ip_addresses_str = ", ".join(ip_addresses) if ip_addresses else "N/A"
-        html_table += f"<tr><td>{domain}</td><td>{ip_addresses_str}</td><td>{start_date}</td><td>{expiration_date}</td><td>{remaining_days}</td><td>{registrar}</td></tr>\n"
+        html_table += f"<tr>"
+        html_table += f"<td style='border: 1px solid black;'>{domain}</td>"
+        html_table += f"<td style='border: 1px solid black;'>{ip}</td>"
+        html_table += f"<td style='border: 1px solid black;'>{start_date}</td>"
+        html_table += f"<td style='border: 1px solid black;'>{expiration_date}</td>"
+        html_table += f"<td style='border: 1px solid black;'>{remaining_days}</td>"
+        html_table += f"<td style='border: 1px solid black;'>{ip_addresses_str}</td>"
+        html_table += f"<td style='border: 1px solid black;'>{registrar}</td>"
+        html_table += f"</tr>\n"
 
-    html_table += "</table>"
-    html_table += "</body>"
-    html_table += "</html>"
+    html_table += "</table></body></html>"
 
     # HTML 테이블을 result.html 파일에 저장하기
     with open('result.html', 'w') as file:
