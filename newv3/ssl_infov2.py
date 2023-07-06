@@ -1,5 +1,6 @@
 import ssl
 import socket
+import dns.resolver
 from datetime import datetime
 
 def get_ssl_info(domain):
@@ -22,18 +23,20 @@ def get_ssl_info(domain):
         expiration_date = datetime.strptime(cert['notAfter'], "%b %d %H:%M:%S %Y %Z").strftime("%Y-%m-%d")
         remaining_days = (datetime.strptime(expiration_date, "%Y-%m-%d") - datetime.now()).days
 
+        # 도메인의 IP 주소 가져오기 (DNS 쿼리 사용)
+        resolver = dns.resolver.Resolver()
+        ip_addresses = [result.address for result in resolver.resolve(domain, 'A')]
+
         # 등록행자(Registrar) 가져오기
         registrar = ""
         issuer = dict(x[0] for x in cert['issuer'])
         if 'organizationName' in issuer:
             registrar = issuer['organizationName']
 
-        # 도메인의 IP 주소 가져오기
-        ip = socket.gethostbyname(domain)
-
-        return domain, ip, start_date, expiration_date, int(remaining_days), registrar
+        return domain, ip_addresses, start_date, expiration_date, int(remaining_days), registrar
     except (socket.timeout, ssl.SSLCertVerificationError):
-        return domain, "N/A", "N/A", "N/A", "N/A", "N/A"
+        return domain, [], "N/A", "N/A", "N/A", "N/A"
+
 
 if __name__ == '__main__':
     # 파일에서 도메인 이름 가져오기
@@ -91,14 +94,9 @@ if __name__ == '__main__':
     html_table += "</tr>\n"
 
     for row in table_rows:
-        html_table += "<tr>"
-        for i, cell in enumerate(row):
-            # 특정 열에 가운데 정렬 적용하기
-            if i in [2, 3, 4]:
-                html_table += f"<td style='border: 1px solid black; text-align: center;'>{cell}</td>"
-            else:
-                html_table += f"<td style='border: 1px solid black;'>{cell}</td>"
-        html_table += "</tr>\n"
+        domain, ip_addresses, start_date, expiration_date, remaining_days, registrar = row
+        ip_addresses_str = ", ".join(ip_addresses) if ip_addresses else "N/A"
+        html_table += f"<tr><td>{domain}</td><td>{ip_addresses_str}</td><td>{start_date}</td><td>{expiration_date}</td><td>{remaining_days}</td><td>{registrar}</td></tr>\n"
 
     html_table += "</table>"
     html_table += "</body>"
@@ -109,7 +107,3 @@ if __name__ == '__main__':
         file.write(html_table)
 
     print("SSL 정보가 result.html 파일에 저장되었습니다.")
-    
-
-### SSL 인증서 만료일 조회
-# echo "" | openssl s_client -connect example.com:443 2>/dev/null | openssl x509 -noout -startdate -enddate
