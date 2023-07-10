@@ -33,3 +33,10 @@ crontab -e
 ### domain check
 00 10 1-5 * * /bin/bash /app/script/SSL-Certificate-Verify/ssl_certificate_expiration_date_checker_v2.py > /dev/null 2>&1
 ```
+
+---
+### sslinfo_v2.py 실행 방법
+##### domains.txt 입력 파일과 result.html 출력 파일을 명령줄 인수로 전달할 수 있습니다.
+```
+python3 sslinfo_v2.py domains.txt result.html
+````
