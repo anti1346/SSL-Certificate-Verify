@@ -2,7 +2,7 @@
 
 cd /sslchecker
 
-python3 ssl_certificate_expiration_date_checker_v2.py
+python3 sslinfo.py domains.txt result.html
 
 ln -s /sslchecker/result.html /var/www/html/index.html
 
